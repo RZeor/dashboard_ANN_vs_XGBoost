@@ -86,7 +86,7 @@ def load_scaler():
 @st.cache_data
 def load_data():
     try:
-        df = pd.read_csv('data_eval.csv')
+        df = pd.read_csv('data.csv')
         st.sidebar.success("✅ Data loaded")
         return df
     except Exception as e:
