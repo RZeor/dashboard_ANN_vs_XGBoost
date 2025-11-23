@@ -196,7 +196,7 @@ if df is not None and (ann_model is not None or xgb_model is not None):
     )
     
     # Main content
-    tab1, tab2, tab3, tab4 = st.tabs(["📊 Model Evaluation", "🔮 Inference", "📈 Data Analysis", "ℹ️ About"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Model Evaluation", "🔮 Inference", "🎯 Manual Prediction", "📈 Data Analysis", "ℹ️ About"])
     
     with tab1:
         st.header("Model Evaluation Metrics")
@@ -513,6 +513,219 @@ if df is not None and (ann_model is not None or xgb_model is not None):
         )
     
     with tab3:
+        st.header("🎯 Manual Prediction")
+        st.info("💡 Input transaction details to get fraud prediction from both models")
+        
+        # Get sample data to understand the structure
+        sample_data = X_inference.iloc[0] if len(X_inference) > 0 else None
+        
+        # Create two columns for input form
+        st.subheader("📝 Transaction Details")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### Transaction Type")
+            # Transaction type selection
+            transaction_types = ['CASH_IN', 'CASH_OUT', 'DEBIT', 'PAYMENT', 'TRANSFER']
+            selected_type = st.selectbox("Select Transaction Type", transaction_types)
+            
+            st.markdown("#### Transaction Amount")
+            amount_input = st.number_input(
+                "Amount ($)",
+                min_value=0.0,
+                max_value=10000000.0,
+                value=1000.0,
+                step=100.0,
+                format="%.2f"
+            )
+            
+            st.markdown("#### Origin Account Balance")
+            old_balance_orig = st.number_input(
+                "Old Balance Origin ($)",
+                min_value=0.0,
+                max_value=100000000.0,
+                value=10000.0,
+                step=100.0,
+                format="%.2f"
+            )
+            
+            new_balance_orig = st.number_input(
+                "New Balance Origin ($)",
+                min_value=0.0,
+                max_value=100000000.0,
+                value=old_balance_orig - amount_input if old_balance_orig >= amount_input else 0.0,
+                step=100.0,
+                format="%.2f"
+            )
+        
+        with col2:
+            st.markdown("#### Destination Account Balance")
+            old_balance_dest = st.number_input(
+                "Old Balance Destination ($)",
+                min_value=0.0,
+                max_value=100000000.0,
+                value=5000.0,
+                step=100.0,
+                format="%.2f"
+            )
+            
+            new_balance_dest = st.number_input(
+                "New Balance Destination ($)",
+                min_value=0.0,
+                max_value=100000000.0,
+                value=old_balance_dest + amount_input,
+                step=100.0,
+                format="%.2f"
+            )
+            
+            st.markdown("#### Additional Options")
+            use_random_sample = st.checkbox("📋 Use Random Sample from Data", value=False)
+            
+            if use_random_sample:
+                if st.button("🎲 Load Random Transaction"):
+                    random_idx = np.random.randint(0, len(df))
+                    st.session_state['random_transaction'] = random_idx
+                    st.rerun()
+        
+        # Load random transaction if selected
+        if use_random_sample and 'random_transaction' in st.session_state:
+            random_idx = st.session_state['random_transaction']
+            random_row = df.iloc[random_idx]
+            
+            # Denormalize and decode
+            random_display = inverse_transform_data(pd.DataFrame([random_row]), scaler).iloc[0]
+            random_display_decoded = decode_one_hot(pd.DataFrame([random_display])).iloc[0]
+            
+            st.info(f"📋 Loaded transaction from row {random_idx}")
+            
+            # Update values
+            if 'type' in random_display_decoded.index:
+                selected_type = random_display_decoded['type']
+            if 'amount' in random_display_decoded.index:
+                amount_input = random_display_decoded['amount']
+            if 'oldbalanceOrg' in random_display_decoded.index:
+                old_balance_orig = random_display_decoded['oldbalanceOrg']
+            if 'newbalanceOrig' in random_display_decoded.index:
+                new_balance_orig = random_display_decoded['newbalanceOrig']
+            if 'oldbalanceDest' in random_display_decoded.index:
+                old_balance_dest = random_display_decoded['oldbalanceDest']
+            if 'newbalanceDest' in random_display_decoded.index:
+                new_balance_dest = random_display_decoded['newbalanceDest']
+        
+        st.markdown("---")
+        
+        # Predict button
+        if st.button("🔮 Predict Fraud", type="primary", use_container_width=True):
+            with st.spinner("Processing prediction..."):
+                # Create input dataframe
+                input_data = {
+                    'amount': amount_input,
+                    'oldbalanceOrg': old_balance_orig,
+                    'newbalanceOrig': new_balance_orig,
+                    'oldbalanceDest': old_balance_dest,
+                    'newbalanceDest': new_balance_dest
+                }
+                
+                # One-hot encode transaction type
+                for t_type in transaction_types:
+                    col_name = f'type_{t_type}'
+                    if col_name in X_inference.columns:
+                        input_data[col_name] = 1 if t_type == selected_type else 0
+                
+                # Create DataFrame
+                input_df = pd.DataFrame([input_data])
+                
+                # Normalize using scaler if available
+                if scaler is not None:
+                    numerical_cols = ['amount', 'oldbalanceOrg', 'newbalanceOrig', 'oldbalanceDest', 'newbalanceDest']
+                    available_cols = [col for col in numerical_cols if col in input_df.columns]
+                    if available_cols:
+                        input_df[available_cols] = scaler.transform(input_df[available_cols])
+                
+                # Ensure all required columns are present
+                for col in X_inference.columns:
+                    if col not in input_df.columns:
+                        input_df[col] = 0
+                
+                # Reorder columns to match training data
+                input_df = input_df[X_inference.columns]
+                
+                # Make predictions
+                st.markdown("---")
+                st.subheader("🎯 Prediction Results")
+                
+                result_col1, result_col2 = st.columns(2)
+                
+                # ANN Prediction
+                if model_choice in ["ANN", "Compare Both"] and ann_model is not None:
+                    with result_col1:
+                        st.markdown("### 🧠 ANN Model")
+                        ann_prob = float(ann_model.predict(input_df, verbose=0)[0][0])
+                        ann_pred = 1 if ann_prob > confidence_threshold else 0
+                        
+                        # Display probability
+                        st.metric("Fraud Probability", f"{ann_prob:.4f}", delta=f"{ann_prob*100:.2f}%")
+                        
+                        # Display prediction with color
+                        if ann_pred == 1:
+                            st.error("🚨 **FRAUD DETECTED**")
+                            st.progress(min(ann_prob, 1.0))
+                        else:
+                            st.success("✅ **LEGITIMATE TRANSACTION**")
+                            st.progress(min(ann_prob, 1.0))
+                        
+                        st.caption(f"Threshold: {confidence_threshold}")
+                
+                # XGBoost Prediction
+                if model_choice in ["XGBoost", "Compare Both"] and xgb_model is not None:
+                    with result_col2:
+                        st.markdown("### 🌳 XGBoost Model")
+                        xgb_pred = int(xgb_model.predict(input_df)[0])
+                        
+                        # Get probability if available
+                        try:
+                            xgb_prob = float(xgb_model.predict_proba(input_df)[0][1])
+                            st.metric("Fraud Probability", f"{xgb_prob:.4f}", delta=f"{xgb_prob*100:.2f}%")
+                            st.progress(min(xgb_prob, 1.0))
+                        except:
+                            st.metric("Prediction", "Fraud" if xgb_pred == 1 else "Non-Fraud")
+                        
+                        # Display prediction with color
+                        if xgb_pred == 1:
+                            st.error("🚨 **FRAUD DETECTED**")
+                        else:
+                            st.success("✅ **LEGITIMATE TRANSACTION**")
+                
+                # Summary
+                st.markdown("---")
+                st.subheader("📊 Transaction Summary")
+                
+                summary_data = {
+                    "Field": ["Transaction Type", "Amount", "Old Balance (Origin)", "New Balance (Origin)", 
+                             "Old Balance (Dest)", "New Balance (Dest)"],
+                    "Value": [
+                        selected_type,
+                        f"${amount_input:,.2f}",
+                        f"${old_balance_orig:,.2f}",
+                        f"${new_balance_orig:,.2f}",
+                        f"${old_balance_dest:,.2f}",
+                        f"${new_balance_dest:,.2f}"
+                    ]
+                }
+                
+                summary_df = pd.DataFrame(summary_data)
+                st.dataframe(summary_df, use_container_width=True, hide_index=True)
+                
+                # Model agreement
+                if model_choice == "Compare Both" and ann_model is not None and xgb_model is not None:
+                    st.markdown("---")
+                    if ann_pred == xgb_pred:
+                        st.success(f"✅ **Models Agree**: Both predict {'FRAUD' if ann_pred == 1 else 'NON-FRAUD'}")
+                    else:
+                        st.warning(f"⚠️ **Models Disagree**: ANN predicts {'FRAUD' if ann_pred == 1 else 'NON-FRAUD'}, XGBoost predicts {'FRAUD' if xgb_pred == 1 else 'NON-FRAUD'}")
+    
+    with tab4:
         st.header("Data Analysis & Visualization")
         st.info("📈 Using data.csv with denormalization and decoding for analysis")
         
@@ -692,7 +905,7 @@ if df is not None and (ann_model is not None or xgb_model is not None):
             fig.update_yaxes(tickprefix="$", tickformat=",.0f")
             st.plotly_chart(fig, use_container_width=True)
         
-    with tab4:
+    with tab5:
         st.header("ℹ️ About This Dashboard")
         
         st.markdown("""
@@ -702,6 +915,7 @@ if df is not None and (ann_model is not None or xgb_model is not None):
         ### 🔧 Features
         - **Model Evaluation**: Compare ANN and XGBoost model performance with detailed metrics
         - **Inference**: Run predictions on new data with configurable parameters
+        - **Manual Prediction**: Input custom transaction details for real-time fraud prediction
         - **Data Analysis**: Visualize data distributions and patterns
         - **Data Denormalization**: View inference results in original scale
         
