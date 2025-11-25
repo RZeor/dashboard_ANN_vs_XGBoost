@@ -109,8 +109,9 @@ Ensure the following files are in the project directory:
 dashboard_ANN_vs_XGBoost/
 ├── app.py                          # Main Streamlit application
 ├── requirements.txt                # Python dependencies
-├── data.csv                        # Preprocessed data for inference
-├── data_eval.csv                   # Data for model evaluation
+├── data                            # data fraud
+     ├── data.csv                   # Preprocessed data for inference
+     └── data_eval.csv              # Data for model evaluation
 ├── README.md                       # This file
 └── model/
     ├── ANN/
