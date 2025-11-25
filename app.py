@@ -86,7 +86,7 @@ def load_scaler():
 @st.cache_data
 def load_data():
     try:
-        df = pd.read_csv('data.csv')
+        df = pd.read_csv('data/data.csv')
         st.sidebar.success("✅ Data loaded")
         return df
     except Exception as e:
@@ -97,7 +97,7 @@ def load_data():
 @st.cache_data
 def load_eval_data():
     try:
-        df_eval = pd.read_csv('data_eval.csv')
+        df_eval = pd.read_csv('data/data_eval.csv')
         st.sidebar.success("✅ Evaluation data loaded")
         return df_eval
     except Exception as e:
@@ -196,7 +196,7 @@ if df is not None and (ann_model is not None or xgb_model is not None):
     )
     
     # Main content
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Model Evaluation", "🔮 Inference", "🎯 Manual Prediction", "📈 Data Analysis", "ℹ️ About"])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📊 Model Evaluation", "🔮 Inference", "🎯 Manual Prediction", "📤 Upload CSV", "📈 Data Analysis", "ℹ️ About"])
     
     with tab1:
         st.header("Model Evaluation Metrics")
@@ -527,7 +527,7 @@ if df is not None and (ann_model is not None or xgb_model is not None):
         with col1:
             st.markdown("#### Transaction Type")
             # Transaction type selection
-            transaction_types = ['CASH_IN', 'CASH_OUT', 'DEBIT', 'PAYMENT', 'TRANSFER']
+            transaction_types = ['CASH_OUT', 'TRANSFER']
             selected_type = st.selectbox("Select Transaction Type", transaction_types)
             
             st.markdown("#### Transaction Amount")
@@ -726,6 +726,335 @@ if df is not None and (ann_model is not None or xgb_model is not None):
                         st.warning(f"⚠️ **Models Disagree**: ANN predicts {'FRAUD' if ann_pred == 1 else 'NON-FRAUD'}, XGBoost predicts {'FRAUD' if xgb_pred == 1 else 'NON-FRAUD'}")
     
     with tab4:
+        st.header("📤 Upload CSV for Batch Prediction")
+        st.info("💡 Upload your own CSV file to get fraud predictions for multiple transactions")
+        
+        st.markdown("""
+        ### 📋 CSV Format Requirements
+        Your CSV file should contain the following columns (can be normalized or not):
+        - `amount`: Transaction amount
+        - `oldbalanceOrg`: Origin account balance before transaction
+        - `newbalanceOrig`: Origin account balance after transaction
+        - `oldbalanceDest`: Destination account balance before transaction
+        - `newbalanceDest`: Destination account balance after transaction
+        - `type` or `type_*`: Transaction type (CASH_OUT or TRANSFER only)
+        
+        **Note**: If your data is not normalized, it will be automatically normalized using the scaler.
+        """)
+        
+        # File uploader
+        uploaded_file = st.file_uploader("Choose a CSV file", type=['csv'], key='csv_uploader')
+        
+        if uploaded_file is not None:
+            try:
+                # Read uploaded CSV
+                uploaded_df = pd.read_csv(uploaded_file)
+                
+                st.success(f"✅ File uploaded successfully! ({len(uploaded_df):,} records)")
+                
+                # Display preview
+                with st.expander("👁️ Preview Data (First 10 rows)", expanded=True):
+                    st.dataframe(uploaded_df.head(10), use_container_width=True)
+                
+                st.markdown("---")
+                
+                # Data validation
+                st.subheader("🔍 Data Validation")
+                
+                col_check1, col_check2 = st.columns(2)
+                
+                with col_check1:
+                    st.write("**Detected Columns:**")
+                    st.write(uploaded_df.columns.tolist())
+                
+                with col_check2:
+                    st.write("**Data Info:**")
+                    st.write(f"- Total Rows: {len(uploaded_df):,}")
+                    st.write(f"- Total Columns: {len(uploaded_df.columns)}")
+                    st.write(f"- Missing Values: {uploaded_df.isnull().sum().sum()}")
+                
+                # Check if data needs preprocessing
+                needs_preprocessing = st.checkbox("📊 Data is in original scale (needs normalization and encoding)", value=True)
+                
+                st.markdown("---")
+                
+                # Process button
+                if st.button("🔮 Run Batch Prediction", type="primary", use_container_width=True):
+                    with st.spinner("Processing predictions..."):
+                        try:
+                            # Store original data for display
+                            uploaded_df_original = uploaded_df.copy()
+                            
+                            # Preprocessing if needed
+                            if needs_preprocessing:
+                                st.info("⚙️ Preprocessing data (normalization and encoding)...")
+                                
+                                # Check if 'type' column exists (categorical)
+                                if 'type' in uploaded_df.columns:
+                                    # One-hot encode type
+                                    type_dummies = pd.get_dummies(uploaded_df['type'], prefix='type')
+                                    uploaded_df = pd.concat([uploaded_df.drop('type', axis=1), type_dummies], axis=1)
+                                
+                                # Normalize numerical columns
+                                if scaler is not None:
+                                    numerical_cols = ['amount', 'oldbalanceOrg', 'newbalanceOrig', 'oldbalanceDest', 'newbalanceDest']
+                                    available_cols = [col for col in numerical_cols if col in uploaded_df.columns]
+                                    
+                                    if available_cols:
+                                        uploaded_df[available_cols] = scaler.transform(uploaded_df[available_cols])
+                                        st.success(f"✅ Normalized {len(available_cols)} numerical columns")
+                            
+                            # Remove 'isFraud' if exists (ground truth)
+                            has_ground_truth = 'isFraud' in uploaded_df.columns
+                            if has_ground_truth:
+                                y_true = uploaded_df['isFraud'].copy()
+                                uploaded_df = uploaded_df.drop('isFraud', axis=1)
+                            
+                            # Ensure all required columns are present
+                            for col in X_inference.columns:
+                                if col not in uploaded_df.columns:
+                                    uploaded_df[col] = 0
+                            
+                            # Reorder columns to match training data
+                            uploaded_df = uploaded_df[X_inference.columns]
+                            
+                            st.success("✅ Data preprocessing completed!")
+                            
+                            # Make predictions
+                            results_df = uploaded_df_original.copy()
+                            
+                            if model_choice in ["ANN", "Compare Both"] and ann_model is not None:
+                                st.info("🧠 Running ANN predictions...")
+                                ann_predictions_prob = ann_model.predict(uploaded_df, verbose=0)
+                                results_df['ANN_Probability'] = ann_predictions_prob.flatten()
+                                results_df['ANN_Prediction'] = (ann_predictions_prob > confidence_threshold).astype(int).flatten()
+                                st.success(f"✅ ANN predictions completed!")
+                            
+                            if model_choice in ["XGBoost", "Compare Both"] and xgb_model is not None:
+                                st.info("🌳 Running XGBoost predictions...")
+                                xgb_predictions = xgb_model.predict(uploaded_df)
+                                results_df['XGBoost_Prediction'] = xgb_predictions
+                                
+                                # Try to get probabilities
+                                try:
+                                    xgb_predictions_prob = xgb_model.predict_proba(uploaded_df)[:, 1]
+                                    results_df['XGBoost_Probability'] = xgb_predictions_prob
+                                except:
+                                    pass
+                                
+                                st.success(f"✅ XGBoost predictions completed!")
+                            
+                            # Add ground truth if available
+                            if has_ground_truth:
+                                results_df['True_Label'] = y_true.values
+                            
+                            st.markdown("---")
+                            st.subheader("📊 Prediction Results Summary")
+                            
+                            # Summary metrics
+                            summary_col1, summary_col2, summary_col3, summary_col4 = st.columns(4)
+                            
+                            with summary_col1:
+                                st.metric("📄 Total Records", f"{len(results_df):,}")
+                            
+                            with summary_col2:
+                                if 'ANN_Prediction' in results_df.columns:
+                                    ann_fraud_count = results_df['ANN_Prediction'].sum()
+                                    ann_fraud_pct = (ann_fraud_count / len(results_df)) * 100
+                                    st.metric("🧠 ANN Fraud Detected", f"{ann_fraud_count:,}", delta=f"{ann_fraud_pct:.1f}%")
+                            
+                            with summary_col3:
+                                if 'XGBoost_Prediction' in results_df.columns:
+                                    xgb_fraud_count = results_df['XGBoost_Prediction'].sum()
+                                    xgb_fraud_pct = (xgb_fraud_count / len(results_df)) * 100
+                                    st.metric("🌳 XGBoost Fraud Detected", f"{xgb_fraud_count:,}", delta=f"{xgb_fraud_pct:.1f}%")
+                            
+                            with summary_col4:
+                                if has_ground_truth:
+                                    true_fraud_count = results_df['True_Label'].sum()
+                                    true_fraud_pct = (true_fraud_count / len(results_df)) * 100
+                                    st.metric("✅ Actual Fraud", f"{true_fraud_count:,}", delta=f"{true_fraud_pct:.1f}%")
+                            
+                            # Model agreement analysis
+                            if 'ANN_Prediction' in results_df.columns and 'XGBoost_Prediction' in results_df.columns:
+                                st.markdown("---")
+                                st.subheader("🤝 Model Agreement Analysis")
+                                
+                                agreement_col1, agreement_col2 = st.columns(2)
+                                
+                                with agreement_col1:
+                                    agree_count = (results_df['ANN_Prediction'] == results_df['XGBoost_Prediction']).sum()
+                                    agree_pct = (agree_count / len(results_df)) * 100
+                                    st.metric("✅ Agreement", f"{agree_count:,}", delta=f"{agree_pct:.1f}%")
+                                
+                                with agreement_col2:
+                                    disagree_count = (results_df['ANN_Prediction'] != results_df['XGBoost_Prediction']).sum()
+                                    disagree_pct = (disagree_count / len(results_df)) * 100
+                                    st.metric("⚠️ Disagreement", f"{disagree_count:,}", delta=f"{disagree_pct:.1f}%")
+                            
+                            # Performance metrics if ground truth available
+                            if has_ground_truth:
+                                st.markdown("---")
+                                st.subheader("📈 Model Performance on Uploaded Data")
+                                
+                                perf_col1, perf_col2 = st.columns(2)
+                                
+                                if 'ANN_Prediction' in results_df.columns:
+                                    with perf_col1:
+                                        st.markdown("#### 🧠 ANN Metrics")
+                                        ann_acc = accuracy_score(results_df['True_Label'], results_df['ANN_Prediction'])
+                                        ann_prec = precision_score(results_df['True_Label'], results_df['ANN_Prediction'], zero_division=0)
+                                        ann_rec = recall_score(results_df['True_Label'], results_df['ANN_Prediction'], zero_division=0)
+                                        ann_f1 = f1_score(results_df['True_Label'], results_df['ANN_Prediction'], zero_division=0)
+                                        
+                                        metric_col1, metric_col2 = st.columns(2)
+                                        with metric_col1:
+                                            st.metric("Accuracy", f"{ann_acc:.4f}")
+                                            st.metric("Precision", f"{ann_prec:.4f}")
+                                        with metric_col2:
+                                            st.metric("Recall", f"{ann_rec:.4f}")
+                                            st.metric("F1 Score", f"{ann_f1:.4f}")
+                                
+                                if 'XGBoost_Prediction' in results_df.columns:
+                                    with perf_col2:
+                                        st.markdown("#### 🌳 XGBoost Metrics")
+                                        xgb_acc = accuracy_score(results_df['True_Label'], results_df['XGBoost_Prediction'])
+                                        xgb_prec = precision_score(results_df['True_Label'], results_df['XGBoost_Prediction'], zero_division=0)
+                                        xgb_rec = recall_score(results_df['True_Label'], results_df['XGBoost_Prediction'], zero_division=0)
+                                        xgb_f1 = f1_score(results_df['True_Label'], results_df['XGBoost_Prediction'], zero_division=0)
+                                        
+                                        metric_col1, metric_col2 = st.columns(2)
+                                        with metric_col1:
+                                            st.metric("Accuracy", f"{xgb_acc:.4f}")
+                                            st.metric("Precision", f"{xgb_prec:.4f}")
+                                        with metric_col2:
+                                            st.metric("Recall", f"{xgb_rec:.4f}")
+                                            st.metric("F1 Score", f"{xgb_f1:.4f}")
+                            
+                            # Display results table
+                            st.markdown("---")
+                            st.subheader("📋 Detailed Prediction Results")
+                            
+                            # Filter options
+                            filter_col1, filter_col2 = st.columns(2)
+                            
+                            with filter_col1:
+                                result_filter = st.selectbox(
+                                    "Filter Results",
+                                    ["All Records", "Predicted Fraud Only (ANN)", "Predicted Fraud Only (XGBoost)", 
+                                     "Model Disagreement", "High Risk (Both Models)", "Non-Fraud (Both Models)"],
+                                    key='upload_filter'
+                                )
+                            
+                            with filter_col2:
+                                show_limit = st.number_input("Show rows", min_value=10, max_value=len(results_df), value=min(100, len(results_df)), step=10)
+                            
+                            # Apply filter
+                            filtered_results = results_df.copy()
+                            
+                            if result_filter == "Predicted Fraud Only (ANN)" and 'ANN_Prediction' in filtered_results.columns:
+                                filtered_results = filtered_results[filtered_results['ANN_Prediction'] == 1]
+                            elif result_filter == "Predicted Fraud Only (XGBoost)" and 'XGBoost_Prediction' in filtered_results.columns:
+                                filtered_results = filtered_results[filtered_results['XGBoost_Prediction'] == 1]
+                            elif result_filter == "Model Disagreement":
+                                if 'ANN_Prediction' in filtered_results.columns and 'XGBoost_Prediction' in filtered_results.columns:
+                                    filtered_results = filtered_results[filtered_results['ANN_Prediction'] != filtered_results['XGBoost_Prediction']]
+                            elif result_filter == "High Risk (Both Models)":
+                                if 'ANN_Prediction' in filtered_results.columns and 'XGBoost_Prediction' in filtered_results.columns:
+                                    filtered_results = filtered_results[(filtered_results['ANN_Prediction'] == 1) & (filtered_results['XGBoost_Prediction'] == 1)]
+                            elif result_filter == "Non-Fraud (Both Models)":
+                                if 'ANN_Prediction' in filtered_results.columns and 'XGBoost_Prediction' in filtered_results.columns:
+                                    filtered_results = filtered_results[(filtered_results['ANN_Prediction'] == 0) & (filtered_results['XGBoost_Prediction'] == 0)]
+                            
+                            st.write(f"**Showing {min(show_limit, len(filtered_results)):,} of {len(filtered_results):,} filtered records**")
+                            st.dataframe(filtered_results.head(show_limit), use_container_width=True, height=400)
+                            
+                            # Visualizations
+                            st.markdown("---")
+                            st.subheader("📊 Prediction Visualizations")
+                            
+                            viz_col1, viz_col2 = st.columns(2)
+                            
+                            with viz_col1:
+                                if 'ANN_Probability' in results_df.columns:
+                                    fig = px.histogram(results_df, x='ANN_Probability', 
+                                                     nbins=50,
+                                                     title='ANN Prediction Probability Distribution',
+                                                     color_discrete_sequence=['#2ecc71'])
+                                    fig.add_vline(x=confidence_threshold, line_dash="dash", line_color="red", 
+                                                annotation_text=f"Threshold: {confidence_threshold}")
+                                    st.plotly_chart(fig, use_container_width=True)
+                            
+                            with viz_col2:
+                                if 'XGBoost_Probability' in results_df.columns:
+                                    fig = px.histogram(results_df, x='XGBoost_Probability', 
+                                                     nbins=50,
+                                                     title='XGBoost Prediction Probability Distribution',
+                                                     color_discrete_sequence=['#3498db'])
+                                    st.plotly_chart(fig, use_container_width=True)
+                            
+                            # Download results
+                            st.markdown("---")
+                            st.subheader("💾 Download Results")
+                            
+                            download_col1, download_col2 = st.columns(2)
+                            
+                            with download_col1:
+                                csv_all = results_df.to_csv(index=False).encode('utf-8')
+                                st.download_button(
+                                    label="📥 Download All Results (CSV)",
+                                    data=csv_all,
+                                    file_name="batch_prediction_results.csv",
+                                    mime="text/csv",
+                                    use_container_width=True
+                                )
+                            
+                            with download_col2:
+                                csv_filtered = filtered_results.to_csv(index=False).encode('utf-8')
+                                st.download_button(
+                                    label="📥 Download Filtered Results (CSV)",
+                                    data=csv_filtered,
+                                    file_name=f"batch_prediction_{result_filter.replace(' ', '_').lower()}.csv",
+                                    mime="text/csv",
+                                    use_container_width=True
+                                )
+                        
+                        except Exception as e:
+                            st.error(f"❌ Error during prediction: {str(e)}")
+                            st.exception(e)
+            
+            except Exception as e:
+                st.error(f"❌ Error reading CSV file: {str(e)}")
+                st.exception(e)
+        else:
+            st.info("👆 Please upload a CSV file to begin batch prediction")
+            
+            # Show example
+            st.markdown("---")
+            st.subheader("📝 Example CSV Format")
+            
+            example_data = {
+                'type': ['CASH_OUT', 'TRANSFER', 'CASH_OUT'],
+                'amount': [1000.50, 5000.00, 2500.75],
+                'oldbalanceOrg': [10000.00, 50000.00, 25000.00],
+                'newbalanceOrig': [9000.50, 45000.00, 22500.25],
+                'oldbalanceDest': [5000.00, 10000.00, 15000.00],
+                'newbalanceDest': [6000.50, 15000.00, 17500.75]
+            }
+            
+            example_df = pd.DataFrame(example_data)
+            st.dataframe(example_df, use_container_width=True)
+            
+            # Download example
+            csv_example = example_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Download Example CSV Template",
+                data=csv_example,
+                file_name="example_template.csv",
+                mime="text/csv"
+            )
+    
+    with tab5:
         st.header("Data Analysis & Visualization")
         st.info("📈 Using data.csv with denormalization and decoding for analysis")
         
@@ -905,7 +1234,7 @@ if df is not None and (ann_model is not None or xgb_model is not None):
             fig.update_yaxes(tickprefix="$", tickformat=",.0f")
             st.plotly_chart(fig, use_container_width=True)
         
-    with tab5:
+    with tab6:
         st.header("ℹ️ About This Dashboard")
         
         st.markdown("""
@@ -916,6 +1245,7 @@ if df is not None and (ann_model is not None or xgb_model is not None):
         - **Model Evaluation**: Compare ANN and XGBoost model performance with detailed metrics
         - **Inference**: Run predictions on new data with configurable parameters
         - **Manual Prediction**: Input custom transaction details for real-time fraud prediction
+        - **Upload CSV**: Batch prediction on uploaded CSV files with automatic preprocessing
         - **Data Analysis**: Visualize data distributions and patterns
         - **Data Denormalization**: View inference results in original scale
         
