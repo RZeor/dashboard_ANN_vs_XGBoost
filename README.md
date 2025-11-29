@@ -58,13 +58,15 @@ Experience the full functionality of the fraud detection system without any inst
 - Example CSV template provided
 
 ### 📈 **Data Analysis & Visualization**
-- Transaction type distribution
-- Fraud vs non-fraud analysis
-- Amount and balance analysis (original scale)
-- Statistical summaries
-- Correlation heatmaps
+- Transaction type distribution with interactive charts
+- Fraud vs non-fraud analysis with donut charts
+- Amount and balance analysis in original scale
+- Statistical summaries with currency formatting
+- Correlation heatmaps with customizable features
 - Fraud analysis by transaction type
-- Interactive Plotly visualizations
+- **Performance optimized** with lazy loading and expandable sections
+- **Smart caching** for instant reloads
+- Interactive Plotly visualizations with smooth animations
 
 ## 🚀 Getting Started
 
@@ -109,9 +111,8 @@ Ensure the following files are in the project directory:
 dashboard_ANN_vs_XGBoost/
 ├── app.py                          # Main Streamlit application
 ├── requirements.txt                # Python dependencies
-├── data                            # data fraud
-     ├── data.csv                   # Preprocessed data for inference
-     └── data_eval.csv              # Data for model evaluation
+├── data.csv                        # Preprocessed data for inference
+├── data_eval.csv                   # Data for model evaluation
 ├── README.md                       # This file
 └── model/
     ├── ANN/
@@ -198,21 +199,29 @@ If your data is in original scale (not normalized):
 - Download predictions as CSV
 
 ### 5. Data Analysis Tab
-- Explore data distributions
+- **Performance optimized**: Expand only the sections you need
+- Explore data distributions (lightweight, always visible)
 - Analyze fraud patterns by transaction type
-- View correlation heatmaps
-- Examine statistical summaries
+- View correlation heatmaps (lazy loaded on-demand)
+- Examine statistical summaries with currency formatting
 - Interactive visualizations with Plotly
+- Cached preprocessing for instant reloads
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: Streamlit
+- **Frontend**: Streamlit with custom CSS styling
+- **UI/UX Design**: 
+  - Custom gradient themes (purple/indigo palette)
+  - Glass morphism effects
+  - Smooth CSS animations
+  - Inter font family
 - **Machine Learning**: 
   - TensorFlow/Keras (ANN)
   - XGBoost (Gradient Boosting)
 - **Data Processing**: Pandas, NumPy
 - **Preprocessing**: Scikit-learn (RobustScaler)
 - **Visualization**: Plotly Express, Plotly Graph Objects
+- **Performance**: Streamlit caching (@st.cache_data, @st.cache_resource)
 - **Metrics**: Scikit-learn metrics
 
 ## 📦 Dependencies
@@ -229,14 +238,16 @@ plotly>=5.17.0
 
 ## 🎨 Key Highlights
 
+- **Modern UI/UX**: Beautiful gradient design with smooth animations and hover effects
 - **Interactive Dashboard**: User-friendly interface with intuitive navigation
-- **Real-time Predictions**: Instant fraud detection on manual inputs
-- **Batch Processing**: Handle large datasets efficiently
+- **Real-time Predictions**: Instant fraud detection on manual inputs with progress indicators
+- **Batch Processing**: Handle large datasets efficiently with smart caching
 - **Model Comparison**: Direct comparison between deep learning and ensemble methods
 - **Automatic Preprocessing**: No manual data preparation needed
 - **Beautiful Visualizations**: Interactive charts and plots with Plotly
+- **Performance Optimized**: Lazy loading and cached preprocessing for faster experience
 - **Export Capabilities**: Download predictions and filtered results
-- **Responsive Design**: Clean and modern UI with custom styling
+- **Responsive Design**: Dark theme with purple gradient and glass morphism effects
 
 ## 📈 Model Performance Metrics
 
@@ -245,7 +256,16 @@ The dashboard tracks and displays:
 - **Precision**: Ratio of correct fraud predictions
 - **Recall**: Ability to identify all fraud cases
 - **F1 Score**: Harmonic mean of precision and recall
-- **Confusion Matrix**: Visual breakdown of predictions
+- **Confusion Matrix**: Visual breakdown of predictions with interactive heatmaps
+- **Model Agreement**: Shows when both models agree/disagree on predictions
+
+## ⚡ Performance Features
+
+- **Smart Caching**: Data preprocessing and model loading are cached for instant access
+- **Lazy Loading**: Visualizations load on-demand to reduce initial loading time
+- **Expandable Sections**: Control which analyses to view in the Data Analysis tab
+- **Progress Indicators**: Real-time feedback during model predictions
+- **Optimized Rendering**: Reduced chart heights and efficient data structures
 
 ## 🤝 Contributing
 
@@ -260,11 +280,27 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 **RZeor**
 - GitHub: [@RZeor](https://github.com/RZeor)
 
+## 🎨 UI/UX Features
+
+- **Modern Design**: Purple gradient theme with dark mode aesthetic
+- **Smooth Animations**: FadeIn, slideIn, and hover effects throughout
+- **Glass Morphism**: Translucent cards with backdrop blur effects
+- **Interactive Elements**: 
+  - Hover effects on metrics and buttons
+  - Animated tabs with gradient backgrounds
+  - Custom styled input fields with focus states
+  - Progress bars with gradient fills
+- **Status Indicators**: Real-time system status badges
+- **Enhanced Sidebar**: Organized control panel with visual indicators
+- **Custom Scrollbar**: Themed scrollbar matching the dashboard design
+- **Responsive Layout**: Optimized for different screen sizes
+
 ## 🙏 Acknowledgments
 
 - Built with ❤️ using Streamlit
 - Powered by TensorFlow and XGBoost
 - Visualizations by Plotly
+- UI/UX inspired by modern design principles
 
 ## 📞 Support
 

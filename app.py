@@ -18,35 +18,371 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Custom CSS for enhanced UI/UX
 st.markdown("""
 <style>
-    .main-header {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #1f77b4;
-        text-align: center;
-        margin-bottom: 2rem;
+    /* Import Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+    
+    /* Global Styles */
+    * {
+        font-family: 'Inter', sans-serif;
     }
-    .metric-card {
-        background-color: #f0f2f6;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    
+    /* Main Container */
+    .main {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background-attachment: fixed;
+    }
+    
+    /* Header Styles */
+    .main-header {
+        font-size: 3.5rem;
+        font-weight: 800;
+        background: linear-gradient(120deg, #ffffff, #e0e7ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        animation: fadeInDown 1s ease-in-out;
+    }
+    
+    .subtitle {
+        text-align: center;
+        color: #e0e7ff;
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+        font-weight: 300;
+        animation: fadeIn 1.5s ease-in-out;
+    }
+    
+    /* Card Styles */
+    .stMetric {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 1.5rem;
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .stMetric:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 48px rgba(0,0,0,0.3);
+    }
+    
+    .stMetric label {
+        color: #e0e7ff !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .stMetric [data-testid="stMetricValue"] {
+        color: #ffffff !important;
+        font-size: 2rem !important;
+        font-weight: 700 !important;
+    }
+    
+    .stMetric [data-testid="stMetricDelta"] {
+        color: #a5f3fc !important;
+    }
+    
+    /* Sidebar Styles */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+        border-right: 2px solid #334155;
+    }
+    
+    [data-testid="stSidebar"] .stMarkdown {
+        color: #e2e8f0;
+    }
+    
+    [data-testid="stSidebar"] h1, 
+    [data-testid="stSidebar"] h2, 
+    [data-testid="stSidebar"] h3 {
+        color: #ffffff !important;
+    }
+    
+    /* Button Styles */
+    .stButton > button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    }
+    
+    .stButton > button:active {
+        transform: translateY(0px);
+    }
+    
+    /* Tab Styles */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background-color: rgba(15, 23, 42, 0.6);
+        border-radius: 12px;
+        padding: 0.5rem;
+        backdrop-filter: blur(10px);
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background-color: transparent;
+        border-radius: 8px;
+        color: #e2e8f0;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        background-color: rgba(102, 126, 234, 0.2);
+        color: white;
+    }
+    
+    /* Input Styles */
+    .stSelectbox, .stNumberInput, .stTextInput {
+        border-radius: 8px;
+    }
+    
+    .stSelectbox > div > div,
+    .stNumberInput > div > div > input,
+    .stTextInput > div > div > input {
+        background-color: rgba(30, 41, 59, 0.95) !important;
+        color: #e2e8f0 !important;
+        border: 2px solid #475569;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .stSelectbox > div > div:focus,
+    .stNumberInput > div > div > input:focus,
+    .stTextInput > div > div > input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+        background-color: rgba(30, 41, 59, 1) !important;
+    }
+    
+    /* Select box dropdown */
+    .stSelectbox [data-baseweb="select"] > div {
+        background-color: rgba(30, 41, 59, 0.95) !important;
+        color: #e2e8f0 !important;
+    }
+    
+    .stSelectbox [data-baseweb="select"] span {
+        color: #e2e8f0 !important;
+    }
+    
+    /* Dropdown menu */
+    [data-baseweb="popover"] {
+        background-color: rgba(15, 23, 42, 0.98) !important;
+    }
+    
+    [role="listbox"] {
+        background-color: rgba(15, 23, 42, 0.98) !important;
+    }
+    
+    [role="option"] {
+        background-color: transparent !important;
+        color: #e2e8f0 !important;
+    }
+    
+    [role="option"]:hover {
+        background-color: rgba(102, 126, 234, 0.3) !important;
+        color: #ffffff !important;
+    }
+    
+    [aria-selected="true"] {
+        background-color: rgba(102, 126, 234, 0.5) !important;
+        color: #ffffff !important;
+    }
+    
+    /* Card Container */
+    .element-container {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    /* Info/Success/Error Boxes */
+    .stAlert {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Dataframe Styles */
+    .stDataFrame {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    /* Expander Styles */
+    .streamlit-expanderHeader {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .streamlit-expanderHeader:hover {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+    }
+    
+    /* Progress Bar */
+    .stProgress > div > div > div {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px;
+    }
+    
+    /* File Uploader */
+    [data-testid="stFileUploader"] {
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px dashed #667eea;
+        border-radius: 12px;
+        padding: 2rem;
+        transition: all 0.3s ease;
+    }
+    
+    [data-testid="stFileUploader"]:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: #764ba2;
+    }
+    
+    /* Animations */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+    
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #1e293b;
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    }
+    
+    /* Plotly Chart Container */
+    .js-plotly-plot {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Title
-st.markdown('<h1 class="main-header">🔍 Fraud Detection Model Evaluation Dashboard</h1>', unsafe_allow_html=True)
-st.markdown("---")
+# Title with Animation
+st.markdown('''
+<h1 class="main-header">🔍 Fraud Detection Dashboard</h1>
+<p class="subtitle">AI-Powered Transaction Analysis with ANN & XGBoost</p>
+''', unsafe_allow_html=True)
 
-# Sidebar
-st.sidebar.header("⚙️ Configuration")
+# Add a dynamic status banner
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    st.markdown("""
+    <div style='text-align: center; padding: 1rem; background: rgba(34, 197, 94, 0.1); border-radius: 10px; border-left: 4px solid #22c55e;'>
+        <h3 style='color: #22c55e; margin: 0;'>🟢</h3>
+        <p style='color: #e2e8f0; margin: 0; font-size: 0.9rem;'>System Online</p>
+    </div>
+    """, unsafe_allow_html=True)
+with col2:
+    st.markdown("""
+    <div style='text-align: center; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 10px; border-left: 4px solid #3b82f6;'>
+        <h3 style='color: #3b82f6; margin: 0;'>🧠</h3>
+        <p style='color: #e2e8f0; margin: 0; font-size: 0.9rem;'>ANN Ready</p>
+    </div>
+    """, unsafe_allow_html=True)
+with col3:
+    st.markdown("""
+    <div style='text-align: center; padding: 1rem; background: rgba(168, 85, 247, 0.1); border-radius: 10px; border-left: 4px solid #a855f7;'>
+        <h3 style='color: #a855f7; margin: 0;'>🌳</h3>
+        <p style='color: #e2e8f0; margin: 0; font-size: 0.9rem;'>XGBoost Ready</p>
+    </div>
+    """, unsafe_allow_html=True)
+with col4:
+    st.markdown("""
+    <div style='text-align: center; padding: 1rem; background: rgba(234, 179, 8, 0.1); border-radius: 10px; border-left: 4px solid #eab308;'>
+        <h3 style='color: #eab308; margin: 0;'>⚡</h3>
+        <p style='color: #e2e8f0; margin: 0; font-size: 0.9rem;'>Real-time Analysis</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# Enhanced Sidebar
+st.sidebar.markdown("""
+<div style='text-align: center; padding: 1.5rem 0;'>
+    <h1 style='color: #667eea; font-size: 2rem; margin: 0;'>🎛️</h1>
+    <h2 style='color: #ffffff; margin: 0.5rem 0 0 0; font-size: 1.5rem;'>Control Panel</h2>
+    <p style='color: #94a3b8; font-size: 0.85rem; margin: 0.5rem 0 0 0;'>Configure your analysis</p>
+</div>
+""", unsafe_allow_html=True)
+
+st.sidebar.markdown("---")
+
+st.sidebar.markdown("### 🤖 Model Selection")
 model_choice = st.sidebar.selectbox(
-    "Select Model",
+    "Choose your model",
     ["ANN", "XGBoost", "Compare Both"],
-    index=2
+    index=2,
+    help="Select which model(s) to use for predictions"
 )
 
 # Load models
@@ -103,6 +439,14 @@ def load_eval_data():
     except Exception as e:
         st.sidebar.warning(f"⚠️ Error loading evaluation data: {e}")
         return None
+
+# Cache preprocessing operations for visualization
+@st.cache_data
+def preprocess_data_for_visualization(_df, _scaler):
+    """Cache the expensive preprocessing operations"""
+    df_viz = decode_one_hot(_df.copy())
+    df_viz_denorm = inverse_transform_data(df_viz.copy(), _scaler)
+    return df_viz_denorm
 
 # Inverse transform function
 def inverse_transform_data(df_normalized, scaler):
@@ -163,44 +507,94 @@ eval_df = load_eval_data()
 
 if df is not None and (ann_model is not None or xgb_model is not None):
     
-    # Sidebar - Data Info
+    # Sidebar - Data Info with Enhanced Design
     st.sidebar.markdown("---")
-    st.sidebar.subheader("📊 Data Information")
-    st.sidebar.write(f"**Total Records:** {len(df):,}")
+    st.sidebar.markdown("### 📊 Dataset Overview")
+    
+    st.sidebar.markdown(f"""
+    <div style='background: rgba(102, 126, 234, 0.1); padding: 1rem; border-radius: 10px; margin-bottom: 1rem;'>
+        <p style='color: #94a3b8; font-size: 0.85rem; margin: 0;'>Total Records</p>
+        <h3 style='color: #ffffff; margin: 0.25rem 0 0 0;'>{len(df):,}</h3>
+    </div>
+    """, unsafe_allow_html=True)
     
     if 'isFraud' in df.columns:
         fraud_count = df['isFraud'].sum()
         non_fraud_count = len(df) - fraud_count
         fraud_percentage = (fraud_count / len(df)) * 100
         
-        st.sidebar.write(f"**Fraud Cases:** {fraud_count:,} ({fraud_percentage:.2f}%)")
-        st.sidebar.write(f"**Non-Fraud Cases:** {non_fraud_count:,} ({100-fraud_percentage:.2f}%)")
+        col1, col2 = st.sidebar.columns(2)
+        with col1:
+            st.markdown(f"""
+            <div style='background: rgba(239, 68, 68, 0.1); padding: 0.75rem; border-radius: 8px; text-align: center;'>
+                <p style='color: #fca5a5; font-size: 0.75rem; margin: 0;'>Fraud</p>
+                <h4 style='color: #ef4444; margin: 0.25rem 0 0 0;'>{fraud_count:,}</h4>
+                <p style='color: #fca5a5; font-size: 0.7rem; margin: 0.25rem 0 0 0;'>{fraud_percentage:.1f}%</p>
+            </div>
+            """, unsafe_allow_html=True)
+        with col2:
+            st.markdown(f"""
+            <div style='background: rgba(34, 197, 94, 0.1); padding: 0.75rem; border-radius: 8px; text-align: center;'>
+                <p style='color: #86efac; font-size: 0.75rem; margin: 0;'>Legit</p>
+                <h4 style='color: #22c55e; margin: 0.25rem 0 0 0;'>{non_fraud_count:,}</h4>
+                <p style='color: #86efac; font-size: 0.7rem; margin: 0.25rem 0 0 0;'>{100-fraud_percentage:.1f}%</p>
+            </div>
+            """, unsafe_allow_html=True)
     
-    # Sidebar - Sample Size
+    # Sidebar - Sample Size with Enhanced Design
     st.sidebar.markdown("---")
-    st.sidebar.subheader("🎯 Inference Settings")
+    st.sidebar.markdown("### 🎯 Inference Settings")
+    
+    st.sidebar.markdown("""
+    <div style='background: rgba(59, 130, 246, 0.1); padding: 0.5rem 1rem; border-radius: 8px; margin-bottom: 1rem;'>
+        <p style='color: #93c5fd; font-size: 0.8rem; margin: 0;'>💡 Adjust parameters for optimal results</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
     sample_size = st.sidebar.slider(
-        "Sample Size",
+        "📏 Sample Size",
         min_value=100,
         max_value=min(10000, len(df)),
         value=min(1000, len(df)),
-        step=100
+        step=100,
+        help="Number of records to analyze"
     )
     
     confidence_threshold = st.sidebar.slider(
-        "Confidence Threshold (ANN)",
+        "🎚️ Confidence Threshold (ANN)",
         min_value=0.0,
         max_value=1.0,
         value=0.5,
-        step=0.05
+        step=0.05,
+        help="Threshold for classifying transactions as fraud"
     )
+    
+    # Add visual indicator for threshold
+    st.sidebar.markdown(f"""
+    <div style='background: rgba(168, 85, 247, 0.1); padding: 0.75rem; border-radius: 8px; margin-top: 0.5rem;'>
+        <div style='display: flex; justify-content: space-between; align-items: center;'>
+            <span style='color: #c4b5fd; font-size: 0.85rem;'>Current Threshold:</span>
+            <span style='color: #a855f7; font-weight: bold; font-size: 1.1rem;'>{confidence_threshold:.2f}</span>
+        </div>
+        <div style='background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; margin-top: 0.5rem; overflow: hidden;'>
+            <div style='background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); height: 100%; width: {confidence_threshold*100}%; transition: width 0.3s ease;'></div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Main content
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📊 Model Evaluation", "🔮 Inference", "🎯 Manual Prediction", "📤 Upload CSV", "📈 Data Analysis", "ℹ️ About"])
     
     with tab1:
-        st.header("Model Evaluation Metrics")
-        st.info("📊 Using data_eval.csv for model evaluation")
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); 
+                    padding: 2rem; border-radius: 15px; margin-bottom: 2rem; border-left: 5px solid #667eea;'>
+            <h2 style='color: #e2e8f0; margin: 0 0 0.5rem 0;'>📊 Model Evaluation Metrics</h2>
+            <p style='color: #94a3b8; margin: 0; font-size: 0.95rem;'>
+                Comprehensive performance analysis using validation dataset • Real-time metrics • Confusion matrices
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         
         if eval_df is None:
             st.error("❌ Evaluation data (data_eval.csv) not found! Please ensure data_eval.csv is in the same directory as app.py")
@@ -230,7 +624,7 @@ if df is not None and (ann_model is not None or xgb_model is not None):
                 with col1:
                     st.subheader("🧠 ANN Model")
                     
-                    with st.spinner("Evaluating ANN model on data_eval.csv..."):
+                    with st.spinner("🧠 Neural network is analyzing patterns..."):
                         y_pred_ann_prob = ann_model.predict(X, verbose=0)
                         y_pred_ann = (y_pred_ann_prob > confidence_threshold).astype(int).flatten()
                     
@@ -275,7 +669,7 @@ if df is not None and (ann_model is not None or xgb_model is not None):
                 with col2:
                     st.subheader("🌳 XGBoost Model")
                     
-                    with st.spinner("Evaluating XGBoost model on data_eval.csv..."):
+                    with st.spinner("🌳 XGBoost is processing decision trees..."):
                         y_pred_xgb = xgb_model.predict(X)
                     
                     # Metrics
@@ -356,8 +750,15 @@ if df is not None and (ann_model is not None or xgb_model is not None):
                 st.warning("⚠️ Column 'isFraud' not found in evaluation data. Cannot evaluate models.")
     
     with tab2:
-        st.header("Model Inference on New Data")
-        st.info("🔮 Using data.csv for inference (will be denormalized and decoded for display)")
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%); 
+                    padding: 2rem; border-radius: 15px; margin-bottom: 2rem; border-left: 5px solid #22c55e;'>
+            <h2 style='color: #e2e8f0; margin: 0 0 0.5rem 0;'>🔮 Batch Inference Engine</h2>
+            <p style='color: #94a3b8; margin: 0; font-size: 0.95rem;'>
+                Process thousands of transactions instantly • Advanced filtering • Real-time denormalization
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Sample data for inference
         X_inference = df.drop('isFraud', axis=1) if 'isFraud' in df.columns else df
@@ -373,13 +774,13 @@ if df is not None and (ann_model is not None or xgb_model is not None):
         results_normalized = X_inference_sample.copy()
         
         if model_choice in ["ANN", "Compare Both"] and ann_model is not None:
-            with st.spinner("Running ANN inference..."):
+            with st.spinner("🧠 ANN is analyzing transaction patterns..."):
                 ann_pred_prob = ann_model.predict(X_inference_sample, verbose=0)
                 results_normalized['ANN_Probability'] = ann_pred_prob.flatten()
                 results_normalized['ANN_Prediction'] = (ann_pred_prob > confidence_threshold).astype(int).flatten()
         
         if model_choice in ["XGBoost", "Compare Both"] and xgb_model is not None:
-            with st.spinner("Running XGBoost inference..."):
+            with st.spinner("🌳 XGBoost is processing ensemble predictions..."):
                 xgb_pred = xgb_model.predict(X_inference_sample)
                 results_normalized['XGBoost_Prediction'] = xgb_pred
         
@@ -513,8 +914,15 @@ if df is not None and (ann_model is not None or xgb_model is not None):
         )
     
     with tab3:
-        st.header("🎯 Manual Prediction")
-        st.info("💡 Input transaction details to get fraud prediction from both models")
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, rgba(234, 179, 8, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%); 
+                    padding: 2rem; border-radius: 15px; margin-bottom: 2rem; border-left: 5px solid #eab308;'>
+            <h2 style='color: #e2e8f0; margin: 0 0 0.5rem 0;'>🎯 Single Transaction Analyzer</h2>
+            <p style='color: #94a3b8; margin: 0; font-size: 0.95rem;'>
+                Input custom transaction details • Get instant AI predictions • Compare model confidence levels
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Get sample data to understand the structure
         sample_data = X_inference.iloc[0] if len(X_inference) > 0 else None
@@ -615,9 +1023,19 @@ if df is not None and (ann_model is not None or xgb_model is not None):
         
         st.markdown("---")
         
-        # Predict button
-        if st.button("🔮 Predict Fraud", type="primary", use_container_width=True):
-            with st.spinner("Processing prediction..."):
+        # Enhanced Predict button with animation
+        st.markdown("<br>", unsafe_allow_html=True)
+        predict_button = st.button("🔮 Analyze Transaction", type="primary", use_container_width=True)
+        
+        if predict_button:
+            # Add a progress animation
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            status_text.text("⚙️ Preprocessing transaction data...")
+            progress_bar.progress(25)
+            
+            with st.spinner("🤖 AI models are analyzing..."):
                 # Create input dataframe
                 input_data = {
                     'amount': amount_input,
@@ -651,51 +1069,106 @@ if df is not None and (ann_model is not None or xgb_model is not None):
                 # Reorder columns to match training data
                 input_df = input_df[X_inference.columns]
                 
+                status_text.text("🔮 Running AI predictions...")
+                progress_bar.progress(50)
+                
                 # Make predictions
+                progress_bar.progress(75)
+                status_text.text("📊 Generating results...")
+                
+                progress_bar.progress(100)
+                status_text.empty()
+                progress_bar.empty()
+                
                 st.markdown("---")
-                st.subheader("🎯 Prediction Results")
+                st.markdown("""
+                <div style='text-align: center; padding: 1.5rem; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); 
+                            border-radius: 12px; margin-bottom: 1.5rem;'>
+                    <h2 style='color: #e2e8f0; margin: 0;'>🎯 Prediction Results</h2>
+                </div>
+                """, unsafe_allow_html=True)
                 
                 result_col1, result_col2 = st.columns(2)
                 
-                # ANN Prediction
+                # ANN Prediction with Enhanced Design
                 if model_choice in ["ANN", "Compare Both"] and ann_model is not None:
                     with result_col1:
-                        st.markdown("### 🧠 ANN Model")
+                        st.markdown("""
+                        <div style='background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%); 
+                                    padding: 1.5rem; border-radius: 12px; border: 2px solid rgba(59, 130, 246, 0.3);'>
+                            <h3 style='color: #60a5fa; margin: 0 0 1rem 0; text-align: center;'>🧠 Neural Network</h3>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
                         ann_prob = float(ann_model.predict(input_df, verbose=0)[0][0])
                         ann_pred = 1 if ann_prob > confidence_threshold else 0
                         
-                        # Display probability
-                        st.metric("Fraud Probability", f"{ann_prob:.4f}", delta=f"{ann_prob*100:.2f}%")
+                        # Display probability with animation
+                        st.metric("🎯 Fraud Probability", f"{ann_prob:.4f}", delta=f"{ann_prob*100:.2f}%")
                         
-                        # Display prediction with color
+                        # Display prediction with enhanced design
                         if ann_pred == 1:
-                            st.error("🚨 **FRAUD DETECTED**")
+                            st.markdown("""
+                            <div style='background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); 
+                                        padding: 1.5rem; border-radius: 12px; text-align: center; margin: 1rem 0;
+                                        box-shadow: 0 8px 32px rgba(239, 68, 68, 0.4);'>
+                                <h2 style='color: white; margin: 0; font-size: 1.5rem;'>🚨 FRAUD DETECTED</h2>
+                                <p style='color: #fecaca; margin: 0.5rem 0 0 0; font-size: 0.9rem;'>High risk transaction identified</p>
+                            </div>
+                            """, unsafe_allow_html=True)
                             st.progress(min(ann_prob, 1.0))
                         else:
-                            st.success("✅ **LEGITIMATE TRANSACTION**")
+                            st.markdown("""
+                            <div style='background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); 
+                                        padding: 1.5rem; border-radius: 12px; text-align: center; margin: 1rem 0;
+                                        box-shadow: 0 8px 32px rgba(34, 197, 94, 0.4);'>
+                                <h2 style='color: white; margin: 0; font-size: 1.5rem;'>✅ LEGITIMATE</h2>
+                                <p style='color: #bbf7d0; margin: 0.5rem 0 0 0; font-size: 0.9rem;'>Transaction appears safe</p>
+                            </div>
+                            """, unsafe_allow_html=True)
                             st.progress(min(ann_prob, 1.0))
                         
-                        st.caption(f"Threshold: {confidence_threshold}")
+                        st.caption(f"⚖️ Decision Threshold: {confidence_threshold}")
                 
-                # XGBoost Prediction
+                # XGBoost Prediction with Enhanced Design
                 if model_choice in ["XGBoost", "Compare Both"] and xgb_model is not None:
                     with result_col2:
-                        st.markdown("### 🌳 XGBoost Model")
+                        st.markdown("""
+                        <div style='background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%); 
+                                    padding: 1.5rem; border-radius: 12px; border: 2px solid rgba(168, 85, 247, 0.3);'>
+                            <h3 style='color: #c084fc; margin: 0 0 1rem 0; text-align: center;'>🌳 Gradient Boosting</h3>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
                         xgb_pred = int(xgb_model.predict(input_df)[0])
                         
                         # Get probability if available
                         try:
                             xgb_prob = float(xgb_model.predict_proba(input_df)[0][1])
-                            st.metric("Fraud Probability", f"{xgb_prob:.4f}", delta=f"{xgb_prob*100:.2f}%")
+                            st.metric("🎯 Fraud Probability", f"{xgb_prob:.4f}", delta=f"{xgb_prob*100:.2f}%")
                             st.progress(min(xgb_prob, 1.0))
                         except:
-                            st.metric("Prediction", "Fraud" if xgb_pred == 1 else "Non-Fraud")
+                            st.metric("🎯 Prediction", "Fraud" if xgb_pred == 1 else "Non-Fraud")
                         
-                        # Display prediction with color
+                        # Display prediction with enhanced design
                         if xgb_pred == 1:
-                            st.error("🚨 **FRAUD DETECTED**")
+                            st.markdown("""
+                            <div style='background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); 
+                                        padding: 1.5rem; border-radius: 12px; text-align: center; margin: 1rem 0;
+                                        box-shadow: 0 8px 32px rgba(239, 68, 68, 0.4);'>
+                                <h2 style='color: white; margin: 0; font-size: 1.5rem;'>🚨 FRAUD DETECTED</h2>
+                                <p style='color: #fecaca; margin: 0.5rem 0 0 0; font-size: 0.9rem;'>High risk transaction identified</p>
+                            </div>
+                            """, unsafe_allow_html=True)
                         else:
-                            st.success("✅ **LEGITIMATE TRANSACTION**")
+                            st.markdown("""
+                            <div style='background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); 
+                                        padding: 1.5rem; border-radius: 12px; text-align: center; margin: 1rem 0;
+                                        box-shadow: 0 8px 32px rgba(34, 197, 94, 0.4);'>
+                                <h2 style='color: white; margin: 0; font-size: 1.5rem;'>✅ LEGITIMATE</h2>
+                                <p style='color: #bbf7d0; margin: 0.5rem 0 0 0; font-size: 0.9rem;'>Transaction appears safe</p>
+                            </div>
+                            """, unsafe_allow_html=True)
                 
                 # Summary
                 st.markdown("---")
@@ -717,17 +1190,49 @@ if df is not None and (ann_model is not None or xgb_model is not None):
                 summary_df = pd.DataFrame(summary_data)
                 st.dataframe(summary_df, use_container_width=True, hide_index=True)
                 
-                # Model agreement
+                # Enhanced Model agreement
                 if model_choice == "Compare Both" and ann_model is not None and xgb_model is not None:
                     st.markdown("---")
                     if ann_pred == xgb_pred:
-                        st.success(f"✅ **Models Agree**: Both predict {'FRAUD' if ann_pred == 1 else 'NON-FRAUD'}")
+                        st.markdown(f"""
+                        <div style='background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%); 
+                                    padding: 1.5rem; border-radius: 12px; border-left: 5px solid #22c55e; text-align: center;
+                                    box-shadow: 0 4px 20px rgba(34, 197, 94, 0.2);'>
+                            <h3 style='color: #22c55e; margin: 0 0 0.5rem 0;'>✅ Models in Agreement</h3>
+                            <p style='color: #86efac; margin: 0; font-size: 1.1rem;'>
+                                Both models predict: <strong>{'FRAUD 🚨' if ann_pred == 1 else 'LEGITIMATE ✓'}</strong>
+                            </p>
+                            <p style='color: #bbf7d0; margin: 0.5rem 0 0 0; font-size: 0.85rem;'>
+                                High confidence in prediction
+                            </p>
+                        </div>
+                        """, unsafe_allow_html=True)
                     else:
-                        st.warning(f"⚠️ **Models Disagree**: ANN predicts {'FRAUD' if ann_pred == 1 else 'NON-FRAUD'}, XGBoost predicts {'FRAUD' if xgb_pred == 1 else 'NON-FRAUD'}")
+                        st.markdown(f"""
+                        <div style='background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%); 
+                                    padding: 1.5rem; border-radius: 12px; border-left: 5px solid #eab308; text-align: center;
+                                    box-shadow: 0 4px 20px rgba(234, 179, 8, 0.2);'>
+                            <h3 style='color: #eab308; margin: 0 0 0.5rem 0;'>⚠️ Models Disagree</h3>
+                            <p style='color: #fde047; margin: 0; font-size: 0.95rem;'>
+                                🧠 ANN predicts: <strong>{'FRAUD' if ann_pred == 1 else 'LEGITIMATE'}</strong><br>
+                                🌳 XGBoost predicts: <strong>{'FRAUD' if xgb_pred == 1 else 'LEGITIMATE'}</strong>
+                            </p>
+                            <p style='color: #fef08a; margin: 0.5rem 0 0 0; font-size: 0.85rem;'>
+                                Consider additional verification
+                            </p>
+                        </div>
+                        """, unsafe_allow_html=True)
     
     with tab4:
-        st.header("📤 Upload CSV for Batch Prediction")
-        st.info("💡 Upload your own CSV file to get fraud predictions for multiple transactions")
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%); 
+                    padding: 2rem; border-radius: 15px; margin-bottom: 2rem; border-left: 5px solid #a855f7;'>
+            <h2 style='color: #e2e8f0; margin: 0 0 0.5rem 0;'>📤 CSV Upload & Batch Processing</h2>
+            <p style='color: #94a3b8; margin: 0; font-size: 0.95rem;'>
+                Upload your dataset • Automatic preprocessing • Get comprehensive fraud analysis report
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         
         st.markdown("""
         ### 📋 CSV Format Requirements
@@ -1055,184 +1560,209 @@ if df is not None and (ann_model is not None or xgb_model is not None):
             )
     
     with tab5:
-        st.header("Data Analysis & Visualization")
-        st.info("📈 Using data.csv with denormalization and decoding for analysis")
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(14, 165, 233, 0.1) 100%); 
+                    padding: 2rem; border-radius: 15px; margin-bottom: 2rem; border-left: 5px solid #06b6d4;'>
+            <h2 style='color: #e2e8f0; margin: 0 0 0.5rem 0;'>📈 Advanced Data Analytics</h2>
+            <p style='color: #94a3b8; margin: 0; font-size: 0.95rem;'>
+                Interactive visualizations • Statistical insights • Pattern discovery • Correlation analysis
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         
-        # Decode data for visualization - gunakan data yang sudah di-decode dan di-denormalized
-        df_viz = decode_one_hot(df.copy())
-        df_viz_denorm = inverse_transform_data(df_viz.copy(), scaler)
+        # Use cached preprocessing
+        with st.spinner("🔄 Preprocessing data for visualization..."):
+            df_viz_denorm = preprocess_data_for_visualization(df, scaler)
         
-        viz_row1_col1, viz_row1_col2 = st.columns(2)
+        # Add sections with expandable visualizations
+        st.markdown("### 📊 Select Analysis Sections")
+        st.info("💡 Expand sections below to view specific visualizations and reduce loading time")
         
-        with viz_row1_col1:
-            # Transaction Type Distribution
-            if 'type' in df_viz_denorm.columns:
-                type_counts = df_viz_denorm['type'].value_counts()
-                fig = px.bar(x=type_counts.index, y=type_counts.values,
-                           title='Transaction Type Distribution',
-                           labels={'x': 'Transaction Type', 'y': 'Count'},
-                           color=type_counts.values,
-                           color_continuous_scale='Viridis')
-                fig.update_layout(showlegend=False)
-                st.plotly_chart(fig, use_container_width=True)
-        
-        with viz_row1_col2:
-            # Fraud Distribution
-            if 'isFraud' in df_viz_denorm.columns:
-                fraud_dist = df_viz_denorm['isFraud'].value_counts()
-                fig = go.Figure(data=[go.Pie(
-                    labels=['Non-Fraud', 'Fraud'],
-                    values=fraud_dist.values,
-                    hole=.4,
-                    marker_colors=['#2ecc71', '#e74c3c']
-                )])
-                fig.update_layout(title='Fraud vs Non-Fraud Distribution')
-                st.plotly_chart(fig, use_container_width=True)
-        
-        # Fraud by Transaction Type
-        if 'type' in df_viz_denorm.columns and 'isFraud' in df_viz_denorm.columns:
-            st.markdown("---")
-            st.subheader("💰 Fraud Analysis by Transaction Type")
+        # Section 1: Basic Distribution (Always visible - lightweight)
+        with st.expander("📊 Basic Distributions", expanded=True):
+            viz_row1_col1, viz_row1_col2 = st.columns(2)
             
-            fraud_by_type = df_viz_denorm.groupby('type')['isFraud'].agg(['sum', 'count', 'mean'])
-            fraud_by_type.columns = ['Fraud Count', 'Total Transactions', 'Fraud Rate']
-            fraud_by_type['Fraud Rate'] = fraud_by_type['Fraud Rate'] * 100
+            with viz_row1_col1:
+                # Transaction Type Distribution
+                if 'type' in df_viz_denorm.columns:
+                    type_counts = df_viz_denorm['type'].value_counts()
+                    fig = px.bar(x=type_counts.index, y=type_counts.values,
+                               title='Transaction Type Distribution',
+                               labels={'x': 'Transaction Type', 'y': 'Count'},
+                               color=type_counts.values,
+                               color_continuous_scale='Viridis')
+                    fig.update_layout(showlegend=False, height=350)
+                    st.plotly_chart(fig, use_container_width=True)
             
-            fig = make_subplots(
-                rows=1, cols=2,
-                subplot_titles=('Fraud Count by Type', 'Fraud Rate by Type'),
-                specs=[[{"type": "bar"}, {"type": "bar"}]]
-            )
-            
-            fig.add_trace(
-                go.Bar(x=fraud_by_type.index, y=fraud_by_type['Fraud Count'], 
-                      name='Fraud Count', marker_color='#e74c3c'),
-                row=1, col=1
-            )
-            
-            fig.add_trace(
-                go.Bar(x=fraud_by_type.index, y=fraud_by_type['Fraud Rate'],
-                      name='Fraud Rate (%)', marker_color='#3498db'),
-                row=1, col=2
-            )
-            
-            fig.update_xaxes(title_text="Transaction Type", row=1, col=1)
-            fig.update_xaxes(title_text="Transaction Type", row=1, col=2)
-            fig.update_yaxes(title_text="Count", row=1, col=1)
-            fig.update_yaxes(title_text="Percentage (%)", row=1, col=2)
-            
-            fig.update_layout(height=400, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
-        
-        # Amount distribution - GUNAKAN DATA DENORMALIZED
-        st.markdown("---")
-        st.subheader("💵 Transaction Amount Analysis (Original Scale)")
-        
-        if 'amount' in df_viz_denorm.columns:
-            amount_col1, amount_col2 = st.columns(2)
-            
-            with amount_col1:
-                # Histogram dengan data denormalized
-                fig = px.histogram(df_viz_denorm, x='amount', 
-                                 title='Distribution of Transaction Amounts (Original Scale)',
-                                 nbins=50,
-                                 color_discrete_sequence=['#9b59b6'])
-                fig.update_xaxes(title='Amount ($)')
-                fig.update_yaxes(title='Frequency')
-                st.plotly_chart(fig, use_container_width=True)
-            
-            with amount_col2:
+            with viz_row1_col2:
+                # Fraud Distribution
                 if 'isFraud' in df_viz_denorm.columns:
-                    # Box plot dengan data denormalized
-                    fig = px.box(df_viz_denorm, x='isFraud', y='amount',
-                               title='Transaction Amount by Fraud Status (Original Scale)',
-                               labels={'isFraud': 'Is Fraud', 'amount': 'Amount ($)'},
-                               color='isFraud',
-                               color_discrete_map={0: '#2ecc71', 1: '#e74c3c'})
+                    fraud_dist = df_viz_denorm['isFraud'].value_counts()
+                    fig = go.Figure(data=[go.Pie(
+                        labels=['Non-Fraud', 'Fraud'],
+                        values=fraud_dist.values,
+                        hole=.4,
+                        marker_colors=['#2ecc71', '#e74c3c']
+                    )])
+                    fig.update_layout(title='Fraud vs Non-Fraud Distribution', height=350)
                     st.plotly_chart(fig, use_container_width=True)
         
-        # Balance Analysis - GUNAKAN DATA DENORMALIZED
-        st.markdown("---")
-        st.subheader("💰 Balance Analysis (Original Scale)")
-        
-        balance_col1, balance_col2 = st.columns(2)
-        
-        with balance_col1:
-            if 'oldbalanceOrg' in df_viz_denorm.columns and 'isFraud' in df_viz_denorm.columns:
-                fig = px.box(df_viz_denorm, x='isFraud', y='oldbalanceOrg',
-                           title='Origin Old Balance by Fraud Status',
-                           labels={'isFraud': 'Is Fraud', 'oldbalanceOrg': 'Old Balance Origin ($)'},
-                           color='isFraud',
-                           color_discrete_map={0: '#2ecc71', 1: '#e74c3c'})
+        # Section 2: Fraud by Transaction Type
+        with st.expander("💰 Fraud Analysis by Transaction Type", expanded=False):
+            if 'type' in df_viz_denorm.columns and 'isFraud' in df_viz_denorm.columns:
+                fraud_by_type = df_viz_denorm.groupby('type')['isFraud'].agg(['sum', 'count', 'mean'])
+                fraud_by_type.columns = ['Fraud Count', 'Total Transactions', 'Fraud Rate']
+                fraud_by_type['Fraud Rate'] = fraud_by_type['Fraud Rate'] * 100
+                
+                fig = make_subplots(
+                    rows=1, cols=2,
+                    subplot_titles=('Fraud Count by Type', 'Fraud Rate by Type'),
+                    specs=[[{"type": "bar"}, {"type": "bar"}]]
+                )
+                
+                fig.add_trace(
+                    go.Bar(x=fraud_by_type.index, y=fraud_by_type['Fraud Count'], 
+                          name='Fraud Count', marker_color='#e74c3c'),
+                    row=1, col=1
+                )
+                
+                fig.add_trace(
+                    go.Bar(x=fraud_by_type.index, y=fraud_by_type['Fraud Rate'],
+                          name='Fraud Rate (%)', marker_color='#3498db'),
+                    row=1, col=2
+                )
+                
+                fig.update_xaxes(title_text="Transaction Type", row=1, col=1)
+                fig.update_xaxes(title_text="Transaction Type", row=1, col=2)
+                fig.update_yaxes(title_text="Count", row=1, col=1)
+                fig.update_yaxes(title_text="Percentage (%)", row=1, col=2)
+                
+                fig.update_layout(height=400, showlegend=False)
                 st.plotly_chart(fig, use_container_width=True)
         
-        with balance_col2:
-            if 'oldbalanceDest' in df_viz_denorm.columns and 'isFraud' in df_viz_denorm.columns:
-                fig = px.box(df_viz_denorm, x='isFraud', y='oldbalanceDest',
-                           title='Destination Old Balance by Fraud Status',
-                           labels={'isFraud': 'Is Fraud', 'oldbalanceDest': 'Old Balance Dest ($)'},
-                           color='isFraud',
-                           color_discrete_map={0: '#2ecc71', 1: '#e74c3c'})
+        # Section 3: Amount Analysis
+        with st.expander("💵 Transaction Amount Analysis", expanded=False):
+            if 'amount' in df_viz_denorm.columns:
+                amount_col1, amount_col2 = st.columns(2)
+                
+                with amount_col1:
+                    # Histogram dengan data denormalized
+                    fig = px.histogram(df_viz_denorm, x='amount', 
+                                     title='Distribution of Transaction Amounts (Original Scale)',
+                                     nbins=50,
+                                     color_discrete_sequence=['#9b59b6'])
+                    fig.update_xaxes(title='Amount ($)')
+                    fig.update_yaxes(title='Frequency')
+                    fig.update_layout(height=400)
+                    st.plotly_chart(fig, use_container_width=True)
+                
+                with amount_col2:
+                    if 'isFraud' in df_viz_denorm.columns:
+                        # Box plot dengan data denormalized
+                        fig = px.box(df_viz_denorm, x='isFraud', y='amount',
+                                   title='Transaction Amount by Fraud Status (Original Scale)',
+                                   labels={'isFraud': 'Is Fraud', 'amount': 'Amount ($)'},
+                                   color='isFraud',
+                                   color_discrete_map={0: '#2ecc71', 1: '#e74c3c'})
+                        fig.update_layout(height=400)
+                        st.plotly_chart(fig, use_container_width=True)
+        
+        # Section 4: Balance Analysis
+        with st.expander("💰 Balance Analysis", expanded=False):
+            balance_col1, balance_col2 = st.columns(2)
+            
+            with balance_col1:
+                if 'oldbalanceOrg' in df_viz_denorm.columns and 'isFraud' in df_viz_denorm.columns:
+                    fig = px.box(df_viz_denorm, x='isFraud', y='oldbalanceOrg',
+                               title='Origin Old Balance by Fraud Status',
+                               labels={'isFraud': 'Is Fraud', 'oldbalanceOrg': 'Old Balance Origin ($)'},
+                               color='isFraud',
+                               color_discrete_map={0: '#2ecc71', 1: '#e74c3c'})
+                    fig.update_layout(height=400)
+                    st.plotly_chart(fig, use_container_width=True)
+            
+            with balance_col2:
+                if 'oldbalanceDest' in df_viz_denorm.columns and 'isFraud' in df_viz_denorm.columns:
+                    fig = px.box(df_viz_denorm, x='isFraud', y='oldbalanceDest',
+                               title='Destination Old Balance by Fraud Status',
+                               labels={'isFraud': 'Is Fraud', 'oldbalanceDest': 'Old Balance Dest ($)'},
+                               color='isFraud',
+                               color_discrete_map={0: '#2ecc71', 1: '#e74c3c'})
+                    fig.update_layout(height=400)
+                    st.plotly_chart(fig, use_container_width=True)
+        
+        # Section 5: Statistical Summary (Lightweight - always expanded)
+        with st.expander("📊 Statistical Summary", expanded=True):
+            numeric_cols_denorm = ['amount', 'oldbalanceOrg', 'newbalanceOrig', 'oldbalanceDest', 'newbalanceDest']
+            available_cols = [col for col in numeric_cols_denorm if col in df_viz_denorm.columns]
+            
+            if available_cols:
+                summary_stats = df_viz_denorm[available_cols].describe()
+                
+                # Format as currency
+                for col in summary_stats.columns:
+                    summary_stats[col] = summary_stats[col].apply(lambda x: f"${x:,.2f}")
+                
+                st.dataframe(summary_stats, use_container_width=True)
+        
+        # Section 6: Feature Correlations (Heavy - collapsed by default)
+        with st.expander("🔗 Feature Correlations (Click to load)", expanded=False):
+            st.info("⚠️ This visualization may take a moment to load for large datasets")
+            
+            numeric_cols_for_corr = df_viz_denorm.select_dtypes(include=[np.number]).columns.tolist()
+            
+            if len(numeric_cols_for_corr) > 1:
+                # Select features for correlation
+                selected_features = st.multiselect(
+                    "Select features to analyze",
+                    numeric_cols_for_corr,
+                    default=numeric_cols_for_corr[:min(6, len(numeric_cols_for_corr))],
+                    help="Select fewer features for faster rendering"
+                )
+                
+                if selected_features and len(selected_features) > 1:
+                    with st.spinner("🔄 Calculating correlations..."):
+                        corr_matrix = df_viz_denorm[selected_features].corr()
+                        fig = px.imshow(corr_matrix,
+                                      labels=dict(color="Correlation"),
+                                      x=corr_matrix.columns,
+                                      y=corr_matrix.columns,
+                                      color_continuous_scale='RdBu_r',
+                                      aspect="auto",
+                                      text_auto='.2f')
+                        fig.update_layout(title="Feature Correlation Heatmap (Original Scale)", height=600)
+                        st.plotly_chart(fig, use_container_width=True)
+                elif selected_features and len(selected_features) == 1:
+                    st.warning("Please select at least 2 features to show correlations")
+        
+        # Section 7: Fraud vs Amount by Type
+        with st.expander("💸 Fraud Amount Analysis by Transaction Type", expanded=False):
+            if 'type' in df_viz_denorm.columns and 'amount' in df_viz_denorm.columns and 'isFraud' in df_viz_denorm.columns:
+                # Average amount by type and fraud status
+                avg_amount = df_viz_denorm.groupby(['type', 'isFraud'])['amount'].mean().reset_index()
+                avg_amount['isFraud'] = avg_amount['isFraud'].map({0: 'Non-Fraud', 1: 'Fraud'})
+                
+                fig = px.bar(avg_amount, x='type', y='amount', color='isFraud',
+                            title='Average Transaction Amount by Type and Fraud Status',
+                            labels={'amount': 'Average Amount ($)', 'type': 'Transaction Type'},
+                            color_discrete_map={'Non-Fraud': '#2ecc71', 'Fraud': '#e74c3c'},
+                            barmode='group')
+                fig.update_yaxes(tickprefix="$", tickformat=",.0f")
+                fig.update_layout(height=400)
                 st.plotly_chart(fig, use_container_width=True)
         
-        # Statistics Summary - GUNAKAN DATA DENORMALIZED
+        # Performance tip
         st.markdown("---")
-        st.subheader("📊 Statistical Summary (Original Scale)")
-        
-        numeric_cols_denorm = ['amount', 'oldbalanceOrg', 'newbalanceOrig', 'oldbalanceDest', 'newbalanceDest']
-        available_cols = [col for col in numeric_cols_denorm if col in df_viz_denorm.columns]
-        
-        if available_cols:
-            summary_stats = df_viz_denorm[available_cols].describe()
-            
-            # Format as currency
-            for col in summary_stats.columns:
-                summary_stats[col] = summary_stats[col].apply(lambda x: f"${x:,.2f}")
-            
-            st.dataframe(summary_stats, use_container_width=True)
-        
-        # Feature correlations - GUNAKAN DATA DENORMALIZED
-        st.markdown("---")
-        st.subheader("🔗 Feature Correlations (Original Scale)")
-        
-        numeric_cols_for_corr = df_viz_denorm.select_dtypes(include=[np.number]).columns.tolist()
-        
-        if len(numeric_cols_for_corr) > 1:
-            # Select features for correlation
-            selected_features = st.multiselect(
-                "Select features to analyze",
-                numeric_cols_for_corr,
-                default=numeric_cols_for_corr[:min(8, len(numeric_cols_for_corr))]
-            )
-            
-            if selected_features:
-                corr_matrix = df_viz_denorm[selected_features].corr()
-                fig = px.imshow(corr_matrix,
-                              labels=dict(color="Correlation"),
-                              x=corr_matrix.columns,
-                              y=corr_matrix.columns,
-                              color_continuous_scale='RdBu_r',
-                              aspect="auto",
-                              text_auto='.2f')
-                fig.update_layout(title="Feature Correlation Heatmap (Original Scale)", height=600)
-                st.plotly_chart(fig, use_container_width=True)
-        
-        # Fraud vs Amount Analysis by Type - GUNAKAN DATA DENORMALIZED
-        if 'type' in df_viz_denorm.columns and 'amount' in df_viz_denorm.columns and 'isFraud' in df_viz_denorm.columns:
-            st.markdown("---")
-            st.subheader("💸 Fraud Amount Analysis by Transaction Type")
-            
-            # Average amount by type and fraud status
-            avg_amount = df_viz_denorm.groupby(['type', 'isFraud'])['amount'].mean().reset_index()
-            avg_amount['isFraud'] = avg_amount['isFraud'].map({0: 'Non-Fraud', 1: 'Fraud'})
-            
-            fig = px.bar(avg_amount, x='type', y='amount', color='isFraud',
-                        title='Average Transaction Amount by Type and Fraud Status',
-                        labels={'amount': 'Average Amount ($)', 'type': 'Transaction Type'},
-                        color_discrete_map={'Non-Fraud': '#2ecc71', 'Fraud': '#e74c3c'},
-                        barmode='group')
-            fig.update_yaxes(tickprefix="$", tickformat=",.0f")
-            st.plotly_chart(fig, use_container_width=True)
+        st.markdown("""
+        <div style='background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid #3b82f6;'>
+            <h4 style='color: #60a5fa; margin: 0 0 0.5rem 0;'>💡 Performance Tips</h4>
+            <ul style='color: #94a3b8; margin: 0; font-size: 0.9rem;'>
+                <li>Visualizations are loaded on-demand when you expand sections</li>
+                <li>Data preprocessing is cached for faster subsequent loads</li>
+                <li>Select fewer features in correlation analysis for faster rendering</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
         
     with tab6:
         st.header("ℹ️ About This Dashboard")
@@ -1298,3 +1828,33 @@ else:
             st.write(f"- {file}")
     except Exception as e:
         st.error(f"Error listing files: {e}")
+
+# Enhanced Footer
+st.markdown("---")
+st.markdown("""
+<div style='background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.9) 100%); 
+            padding: 2rem; border-radius: 15px; margin-top: 3rem; text-align: center;'>
+    <h3 style='color: #94a3b8; margin: 0 0 1rem 0; font-size: 1.2rem;'>
+        Built with Rzeror
+    </h3>
+    <div style='display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin-bottom: 1rem;'>
+        <div style='color: #64748b;'>
+            <span style='color: #3b82f6; font-weight: bold;'>⚡</span> Powered by TensorFlow & XGBoost
+        </div>
+        <div style='color: #64748b;'>
+            <span style='color: #8b5cf6; font-weight: bold;'>📊</span> Visualized with Plotly
+        </div>
+        <div style='color: #64748b;'>
+            <span style='color: #ef4444; font-weight: bold;'>🎨</span> UI/UX with Streamlit
+        </div>
+    </div>
+    <div style='color: #475569; font-size: 0.85rem; margin-top: 1rem;'>
+        © 2025 Fraud Detection Dashboard • <a href='https://github.com/RZeor' style='color: #667eea; text-decoration: none;'>@RZeor</a>
+    </div>
+    <div style='margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(100, 116, 139, 0.2);'>
+        <p style='color: #64748b; font-size: 0.8rem; margin: 0;'>
+            🔒 Secure • 🚀 Fast • 🎯 Accurate
+        </p>
+    </div>
+</div>
+""", unsafe_allow_html=True)
